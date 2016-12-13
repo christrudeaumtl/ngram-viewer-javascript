@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+
+	<title>Ngram Viewer</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<link rel="stylesheet" type="text/css" href="styles.css">
+	<link rel="stylesheet" type="text/css" href="stylesupplement.css">
+	
+	
+	<script src="scripts.js"></script>
+	
+	<!--- Load content from Google Charts-->
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script type="text/javascript">
+	
+		
+		
+		var searchTerms = [];
+		
+		
+		/**************
+		Google Charts functions and options.
+		**************/
+		
+		google.charts.load('current', {'packages': ['corechart']});
+		google.charts.setOnLoadCallback(drawChart);
+
+		var tableData = [
+			  ['Year', 'Sales', 'Expenses'],
+			  ['2004',  1000,      400],
+			  ['2005',  1170,      460],
+			  ['2006',  660,       1120],
+			  ['2007',  1030,      540]
+			];
+			
+		
+		function getUniqueResult(year, valueArray) {
+			var result;
+			for (var i = 0; i < valueArray.length; i++) {
+				if (valueArray[i] === year) {
+					result = valueArray[i+1];
+					return result;
+				}
+			}
+			result = 0;
+			return result;
+		}
+		
+		function resultRow(year, searchTerms, dictionary) {
+			var result = [year];
+			for (var i = 0; i < searchTerms.length; i++) {
+				if (dictionary.contains(searchTerms[i])) {
+					var valueArray = dictionary.getValue(searchTerms[i]);
+					var temp = getUniqueResult(year, valueArray);
+					result.push(temp);
+				}
+				else {result.push(0);}
+			}
+			return result;
+		}
+		
+		function createChartDataArray(inverted) {
+			var output = [];
+			var temp = ["Year"];
+			for (var i = 0; i < searchTerms.length; i++) {
+				temp.push(searchTerms[i]);
+			}
+			output.push(temp);
+			for (var i = 0; i < dateArray.length; i++) {
+				var tempRow = resultRow(dateArray[i], searchTerms, invertedFiles);
+				output.push(tempRow);
+			}
+			return output;
+		}
+
+		function drawChart() {
+			var data = google.visualization.arrayToDataTable(tableData);
+
+			var options = {
+				title: 'Occurrences of selected word',
+				//curveType: 'function',
+				legend: { position: 'bottom' },
+				chartArea:{backgroundColor:'#e8eaed'},
+				pointSize: 5,
+				vAxis: {
+					title: 'Occurrences'
+				},
+			};
+
+			var chart = new google.visualization.LineChart(document.getElementById('linechart_div'));
+
+			chart.draw(data, options);
+		}
+
+		function graphInput() {
+			var numWords = Number(prompt("How many words would you like to search?" ));
+			for (var i = 0; i < numWords; i++) {
+				searchTerms[i] = prompt("Word " + (i+1) + ":").toLowerCase();
+			}
+			tableData = createChartDataArray(invertedFiles);
+			console.log(tableData);
+			drawChart();
+		}
+		
+	</script>	
+
+
+	<body>
+		
+		<header class="w3-container w3-theme w3-padding">
+			<h1 class="w3-center">An Ngram viewer for text documents</h1>
+		</header>
+		
+		
+		
+		<div class="w3-padding w3-margin-top">
+		
+		
+			<!-- Introduction to website -->
+			<div class="w3-container">
+				<hr>
+				<div class="w3-center">
+					<p>Google's ngram viewer is an excellent way of looking at the content of the books listed with Google Books (which is really all of them). It gives great insight about the trend in topics over time. If we want to compare text documents that are not available in Google Books, the ngram viewer won't help.</p>
+					<p>The point of this ngram viewer is to do just that: take as input some text that is meaningfully linked and return some basic information. What do I mean by meaningfully linked? There should be a common theme to the set of documents. Perhaps you're interested in the occurrence of a topic in a set of Governors General speeches or maybe you just want to know how often parliamentarians talk about cats. Both are valid. The documents should also have a unique provenance: a head of state (or series thereof), a governing body or an author. Please enjoy!</p>
+				</div>
+			</div>
+			
+			
+			
+			<!-- Section for input and output, styled as tabs -->
+			
+			<div class="w3-container">
+				<div class="w3-center"><h2>The Inverted Text File</h2></div>
+				<div class="w3-border">
+					<div>
+						<ul class="w3-navbar w3-theme">
+							<li><a class="w3-btn w3-theme testbtn w3-theme-dark" onclick="openCity(event, 'Input1')">Input 1: Text files</a></li>
+							<li><a class="w3-btn w3-theme testbtn" onclick="openCity(event, 'Input2')">Input 2: Dates</a></li>
+							<li><a class="w3-btn w3-theme testbtn" onclick="openCity(event, 'Output')">Output: Inverted File</a></li>
+						</ul>
+						<div id="Input1" class="w3-container city w3-animate-opacity tab-content" style="display: block;">
+							<p>Upload your files to the n-gram viewer</p>
+							<p>This will only work with text files. You can choose multiples at the same time, but you will be limited to 250 when you get to the next step. At the moment, this has not been tested with .doc/.docx files, only plain text (.txt) files.</p>
+							<input type="file" onchange="readFile(event)" multiple/>
+							<output id="list"></output>
+						</div>
+						<div id="Input2" class="w3-container city w3-animate-opacity tab-content" style="display: none;">
+							<p>Your X axis represents the dates of the document. At the moment, this information has to be generated through the information you submit below. It will generate an array, where each element is one year.</p>
+							<p>You are asked to submit three pieces of information: </br>
+							<ol>
+								<li>Date: the date of the first document as start date;</li>
+								<li>Interval: the amount of time between each document (number of months, years...); </li>
+								<li>Repetitions: the number of total documents. </li>
+							</ol>
+							<p>Please note that limitations have been placed on the numbers that can be entered for some of the fields: (1 &lt;= interval &gt;= 100) and (2 &lt;= repetitions &gt;= 250).</p>
+							<div class="w3-container w3-margin">
+								<h4>Simply click on the button below to manually create your x labels</h4>
+								<input type="button" id="xlabels" value="Create x-axis" onclick="makeXLabels();">
+								<div>
+									<p id="dateArrayDisplayBox"></p>
+								</div>
+							</div>
+						</div>
+						<div id="Output" class="w3-container city w3-animate-opacity tab-content" style="display: none;">
+							<p>Click below to create the inverted file and display its content in the output box.</p>
+							<input type="button" id="createFile" value="Create Inverted File" onclick="createInvertedFile()">
+							<div class="outputBox">
+								<p id="invertedFileBox"></p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			
+			<!-- Section to explain the inverted file -->
+			<div class="w3-container w3-margin-top">
+				<div class="w3-container">
+					<h3>The rules</h3>
+					<p>In the interests of being open about the way that the inverted file is created, you can read below the rules that I've used to create the inverted file.</p>
+					<div class="w3-container">
+						<div class="w3-accordion">
+							 <button onclick="accordianFunction('StopWords')" class="w3-padding-16 w3-theme w3-btn-block w3-left-align w3-margin-top w3-accordion-icon">Stop words</button>
+							 <div id="StopWords" class="w3-accordion-content">
+								<div class="w3-container">
+									<p>This ngram viewer tries to take into account some words that are used in speeches or documents that are both acronyms when in upper case and stop words when in lower case. Therefore, I haven't used a blanket toLowerCase method at the beginning of the process to create the inverted file. The stop words are written with three possible cases: all lowercase, first letter uppercase and all uppercase. The notable example of this rule is IT. You can safely search for the use of IT for information technology and it will return a hit if the term is used that way in the document. Before creating the inverted file, all words are put to lower case so to make matching terms easier.</p>
+									<p>The algorithm is also set to remove all numeric characters at the beginning or at the end of a string, including whole words that have numbers attached to them.</p>
+								</div>
+							 </div>
+							 <button onclick="accordianFunction('StemWords')" class="w3-padding-16 w3-theme w3-btn-block w3-left-align w3-margin-top w3-accordion-icon">Stemming</button>
+							 <div id="StemWords" class="w3-accordion-content">
+								<div class="w3-container">
+									<p>The terms in the document will be stemmed for the following endings: &mdash;sses, &mdash;ss, &mdash;s, &mdash;ed, &mdash;ing, &mdash;er.</p>
+								</div>
+							 </div>
+							 <button onclick="accordianFunction('QueryWords')" class="w3-padding-16 w3-theme w3-btn-block w3-left-align w3-margin-top w3-accordion-icon">Queries</button>
+							 <div id="QueryWords" class="w3-accordion-content">
+								<div class="w3-container">
+									<p>At the moment that you run a query, your term will be rendered to lower case and compared against the inverted file.</p>
+								</div>
+							 </div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			
+			
+			<!-- Section for taking content and loading graphs -->
+			<div class="w3-container w3-margin-top">
+				<div class="w3-center">
+					<h3>Building the Graph</h3>
+					<p>Once the inverted file is loaded, you can click below to look up specific words and build a graph. You will be prompted to choose your words when you click on the button.</p>
+					<input type="button" id="graphInput" value="Draw graph" onclick="graphInput();">
+				</div>
+			</div>
+			
+			<div class="w3-center">
+				<div id="linechart_div" class="gchart"></div>
+			</div>
+			
+		</div>
+		
+		
+		<footer class="w3-container w3-theme-dark">
+		
+			<div class="w3-center">
+				<h4>Thanks! I hope this has been useful!</h4>
+			</div>
+		
+		</footer>
+		
+		
+	</body>
+
+</html>
